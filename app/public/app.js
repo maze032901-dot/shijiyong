@@ -26,27 +26,41 @@ const heading = (eyebrow, title, summary, back) => {
   return box;
 };
 const coverOf = (card) => safeUrl(card.media?.coverUrl || card.media?.imageUrls?.[0]);
-const cardPreview = (card) => {
-  const a = link('', `/interaction?source=${encodeURIComponent(card.collection?.id || card.sources?.[0]?.id || card.id)}&card=${encodeURIComponent(card.id)}`, 'note-card');
+const sourceOf = (card) => safeUrl(card.sources?.[0]?.originalUrl);
+const cardPreview = (card, { group = null, topicId = null } = {}) => {
+  const sourceId = card.collection?.id || card.sources?.[0]?.id || card.id;
+  const target = group?.length > 1
+    ? `/interaction?source=${encodeURIComponent(sourceId)}${topicId ? `&topic=${encodeURIComponent(topicId)}` : ''}`
+    : `/interaction?source=${encodeURIComponent(sourceId)}&card=${encodeURIComponent(card.id)}${topicId ? `&topic=${encodeURIComponent(topicId)}` : ''}`;
+  const article = h('article', 'note-card');
+  const a = link('', target, 'note-card-main');
   const cover = coverOf(card);
   if (cover) { const img = h('img'); img.src = cover; img.alt = ''; img.loading = 'lazy'; a.append(img); }
   a.append(h('span', 'pill', card.type || '卡片'), h('h2', '', card.title || '未命名卡片'));
   const excerpt = card.featuredContent?.[0]?.value || card.content?.[0]?.value || '';
   if (excerpt) a.append(h('p', '', excerpt));
-  return a;
+  article.append(a);
+  const footer = h('div', 'note-card-footer');
+  if (group?.length > 1) footer.append(link(`${group.length} 张卡片 · 查看卡片组 →`, target, 'subtle-link'));
+  const source = sourceOf(card);
+  if (source) footer.append(link('打开原笔记 ↗', source, 'source-link'));
+  article.append(footer);
+  return article;
 };
 function renderHome(library) {
   app.replaceChildren();
   const hero = h('section', 'hero');
-  hero.append(h('div', 'eyebrow', 'MY LIBRARY'), h('h1', '', '按主题，重新发现收藏'), h('p', '', '打开一个主题，再看其中的卡片。正在解析的内容单独放在“收藏解析”。'));
-  app.append(hero);
+  hero.append(h('div', 'eyebrow', 'MY LIBRARY'), h('h1', '', '把喜欢的，\n收进自己的世界。'), h('p', '', `${library.topics?.length || 0} 个主题，慢慢丰富。`));
   const grid = h('section', 'folder-grid');
   for (const topic of library.topics || []) {
     const a = link('', `/topic?topic=${encodeURIComponent(topic.id)}`, 'folder');
+    a.append(h('span', 'folder-paper'));
     const content = h('div'); content.append(h('h2', '', topic.title), h('p', '', `${topic.totalCount ?? topic.cardIds?.length ?? 0} 张卡片`));
     a.append(content, h('span', 'small', '打开主题 ↗')); grid.append(a);
   }
-  app.append(grid.childElementCount ? grid : h('div', 'empty', '还没有主题。收藏并发布第一张卡片后会出现在这里。'));
+  const home = h('div', 'home-layout');
+  home.append(hero, grid.childElementCount ? grid : h('div', 'empty', '还没有主题。收藏并发布第一张卡片后会出现在这里。')));
+  app.append(home);
 }
 function renderTopic(library, topicId) {
   const topic = library.topics.find((item) => item.id === topicId);
@@ -62,12 +76,7 @@ function renderTopic(library, topicId) {
   const grid = h('section', 'card-grid');
   for (const group of groups.values()) {
     const first = group[0];
-    const tile = cardPreview(first);
-    if (group.length > 1) {
-      tile.href = `/interaction?source=${encodeURIComponent(first.collection?.id || first.sources?.[0]?.id || first.id)}&topic=${encodeURIComponent(topicId)}`;
-      tile.append(h('span', 'small', `${group.length} 张卡片 · 打开卡片组`));
-    }
-    grid.append(tile);
+    grid.append(cardPreview(first, { group, topicId }));
   }
   app.append(grid.childElementCount ? grid : h('div', 'empty', '此主题暂时没有卡片。'));
 }
@@ -80,11 +89,9 @@ function renderCard(card, back) {
   app.replaceChildren();
   const detail = h('article', 'card-detail');
   detail.append(heading(card.type || 'CARD', card.title || '未命名卡片', card.topics?.map((item) => item.title).join(' · '), back));
-  const cover = coverOf(card);
-  if (cover) { const img = h('img', 'detail-cover'); img.src = cover; img.alt = `${card.title || '卡片'}配图`; detail.append(img); }
   const actions = h('div', 'actions');
-  const source = safeUrl(card.sources?.[0]?.originalUrl);
-  if (source) actions.append(link('打开来源 ↗', source, 'action'));
+  const source = sourceOf(card);
+  if (source) actions.append(link('打开原笔记 ↗', source, 'action primary'));
   const prompt = card.content?.find((field) => field.kind === 'prompt' && field.value)?.value;
   if (prompt) {
     const button = h('button', 'action', '复制提示词'); button.type = 'button';
@@ -92,11 +99,34 @@ function renderCard(card, back) {
     actions.append(button);
   }
   detail.append(actions);
+  const cover = coverOf(card);
+  if (cover) { const img = h('img', 'detail-cover'); img.src = cover; img.alt = `${card.title || '卡片'}配图`; detail.append(img); }
+  for (const action of card.actions || []) {
+    const target = safeUrl(action.url);
+    if (target) detail.append(link(action.label || '打开操作链接 ↗', target, 'action'));
+    else if (action.text && action.text !== prompt) {
+      const button = h('button', 'action', action.label || '复制内容');
+      button.type = 'button';
+      button.addEventListener('click', async () => { try { await navigator.clipboard.writeText(action.text); button.textContent = '已复制'; } catch { button.textContent = '复制失败'; } });
+      detail.append(button);
+    }
+  }
   for (const field of card.content || []) if (field.value) detail.append(detailBlock(field.label || '内容', field.value));
   for (const path of card.paths || []) if (path.steps?.length) detail.append(detailBlock(path.title || '操作步骤', path.steps.map((step, i) => `${i + 1}. ${typeof step === 'string' ? step : step.text || step.title || ''}`).join('\n')));
-  for (const resource of card.resources || []) {
-    const target = safeUrl(resource.url);
-    if (target) detail.append(link(resource.label || '查看资源 ↗', target, 'action'));
+  if (card.resources?.length) {
+    const box = h('section', 'detail-block');
+    box.append(h('h2', '', '资源与获取线索'));
+    for (const resource of card.resources) {
+      const row = h('p', 'resource-row');
+      const target = safeUrl(resource.url);
+      if (target) row.append(link(resource.label || '打开资源 ↗', target, 'resource-link'));
+      else row.append(h('strong', '', resource.label || '未核实资源'));
+      if (!target) row.append(h('span', 'resource-note', '未取得可核实的直达网址'));
+      if (resource.note) row.append(h('span', 'resource-note', resource.note));
+      box.append(row);
+    }
+    if (source) box.append(link('回原笔记查找线索 ↗', source, 'source-link'));
+    detail.append(box);
   }
   const images = (card.media?.imageUrls || []).map(safeUrl).filter((item) => item && item !== cover);
   if (images.length) { const gallery = h('div', 'gallery'); for (const src of images) { const img = h('img'); img.src = src; img.alt = '卡片配图'; img.loading = 'lazy'; gallery.append(img); } detail.append(h('h2', 'section-label', '相关图片'), gallery); }
@@ -118,7 +148,9 @@ function renderInteraction(library) {
   if (cards.length === 1) { renderCard(cards[0], back); return; }
   app.replaceChildren(heading('COLLECTION', cards[0].collection?.title || '来自同一收藏', `${cards.length} 张卡片`, back));
   const grid = h('section', 'card-grid');
-  for (const card of cards) grid.append(cardPreview(card));
+  for (const card of cards) grid.append(cardPreview(card, { topicId: topic }));
+  const source = sourceOf(cards[0]);
+  if (source) app.append(link('打开原笔记 ↗', source, 'action primary'));
   app.append(grid);
 }
 async function manage(eventId, action, button) {

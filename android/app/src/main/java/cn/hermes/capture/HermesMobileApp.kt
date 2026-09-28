@@ -199,7 +199,17 @@ fun HermesMobileApp(context: Context, captureStore: CaptureStore, serviceEnabled
                             try { mobileConfigStore.save(base, token); notice = "手机连接已保存，正在验证…"; scope.launch { refresh(true) } }
                             catch (error: Exception) { notice = error.message ?: "保存失败" }
                         },
-                        onReceiverSave = { base, token -> receiverStore.save(base, token); LinkSyncScheduler.syncNow(context); notice = "收藏上传配置已保存" },
+                        onReceiverSave = { base, token ->
+                            try {
+                                receiverStore.save(base, token)
+                                LinkSyncScheduler.syncNow(context)
+                                notice = "收藏上传地址已保存，正在重传本机待上传收藏…"
+                                true
+                            } catch (error: Exception) {
+                                notice = error.message ?: "收藏上传地址无效"
+                                false
+                            }
+                        },
                         openAccessibility = openAccessibility, exportDiagnostics = exportDiagnostics,
                         forgetMac = { mobileConfigStore.forgetMacFingerprint(); notice = "已清除 Mac 公钥信任；下次供应商操作会重新配对" })
                 }
@@ -501,12 +511,21 @@ private fun ProvidersScreen(view: JSONObject, back: () -> Unit, onCommand: (Stri
 
 @Composable
 private fun ServiceScreen(config: MobileConfig, receiver: ReceiverConfig, captures: CaptureStore, serviceEnabled: Boolean,
-                          back: () -> Unit, onMobileSave: (String, String) -> Unit, onReceiverSave: (String, String) -> Unit,
+                          back: () -> Unit, onMobileSave: (String, String) -> Unit, onReceiverSave: (String, String) -> Boolean,
                           openAccessibility: () -> Unit, exportDiagnostics: () -> Unit, forgetMac: () -> Unit) {
     var cloudUrl by remember(config.baseUrl) { mutableStateOf(config.baseUrl) }
     var mobileToken by remember { mutableStateOf("") }
     var intakeUrl by remember(receiver.baseUrl) { mutableStateOf(receiver.baseUrl) }
     var intakeToken by remember { mutableStateOf("") }
+    var localLinks by remember { mutableStateOf(captures.savedLinks()) }
+    var latestSync by remember { mutableStateOf(captures.records().lastOrNull { it.outcome.startsWith("sync_") }) }
+    LaunchedEffect(captures) {
+        while (true) {
+            localLinks = captures.savedLinks()
+            latestSync = captures.records().lastOrNull { it.outcome.startsWith("sync_") }
+            delay(2_000)
+        }
+    }
     LazyColumn(Modifier.fillMaxSize()) {
         item { PageTitle("SETTINGS / SERVICE", "服务与后端", "管理采集入口与自己的云端连接。", back) }
         item {
@@ -525,11 +544,21 @@ private fun ServiceScreen(config: MobileConfig, receiver: ReceiverConfig, captur
                 HorizontalDivider(color = border)
                 Text("收藏上传入口", color = ink, fontFamily = serif, fontSize = 19.sp)
                 OutlinedTextField(intakeUrl, { intakeUrl = it }, label = { Text("接收地址") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                Text("只填写一行 HTTPS 基础地址；/api/intake 会自动补上。", color = muted, fontSize = 12.sp)
+                if (config.baseUrl.isNotBlank()) {
+                    TextButton(onClick = { intakeUrl = config.baseUrl }) { Text("使用上方手机卡片库的地址") }
+                }
                 OutlinedTextField(intakeToken, { intakeToken = it }, label = { Text(if (receiver.isComplete) "新接收密钥（不更换可留空）" else "接收密钥") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                     visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
-                OutlinedButton(onClick = { onReceiverSave(intakeUrl, intakeToken.ifBlank { receiver.token }); intakeToken = "" }, enabled = intakeUrl.isNotBlank() && (intakeToken.isNotBlank() || receiver.isComplete)) { Text("保存并同步待上传收藏") }
+                OutlinedButton(onClick = {
+                    if (onReceiverSave(intakeUrl, intakeToken.ifBlank { receiver.token })) intakeToken = ""
+                }, enabled = intakeUrl.isNotBlank() && (intakeToken.isNotBlank() || receiver.isComplete)) { Text("保存并同步待上传收藏") }
+                Text("本机待上传 ${localLinks.count { it.syncState == "local_saved" || it.syncState == "retryable" }} 条 · 云端已接收 ${localLinks.count { it.syncState == "server_queued" }} 条", color = muted, fontSize = 12.sp)
+                latestSync?.let { record ->
+                    Text(record.trigger.removePrefix("同步诊断：").take(220), color = if (record.outcome in listOf("sync_retry", "sync_rejected", "sync_config_invalid")) Color(0xFFA95145) else forest, fontSize = 12.sp)
+                }
                 HorizontalDivider(color = border)
-                Text("本机收藏 ${captures.savedLinks().size} 条", color = ink, fontFamily = serif, fontSize = 19.sp)
+                Text("本机收藏 ${localLinks.size} 条", color = ink, fontFamily = serif, fontSize = 19.sp)
                 Text("保留原有采集记录；升级界面不会清空或改写它们。", color = muted, fontSize = 12.sp)
                 TextButton(onClick = exportDiagnostics) { Text("导出本机收藏与诊断") }
                 Spacer(Modifier.height(25.dp))

@@ -1,12 +1,13 @@
 package cn.hermes.capture
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 
 data class ReceiverConfig(val baseUrl: String, val token: String) {
     val isComplete: Boolean get() = baseUrl.isNotBlank() && token.isNotBlank()
 }
 
-class ReceiverConfigStore(context: Context) {
+class ReceiverConfigStore(private val context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     fun read(): ReceiverConfig = ReceiverConfig(
@@ -15,8 +16,10 @@ class ReceiverConfigStore(context: Context) {
     )
 
     fun save(baseUrl: String, token: String) {
+        val debug = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val normalizedUrl = ServiceBaseUrl.normalize(baseUrl, allowLocalHttp = debug)
         preferences.edit()
-            .putString(KEY_BASE_URL, baseUrl.trim().removeSuffix("/"))
+            .putString(KEY_BASE_URL, normalizedUrl)
             .putString(KEY_TOKEN, token.trim())
             .commit()
     }

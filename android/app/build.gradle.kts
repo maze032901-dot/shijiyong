@@ -11,8 +11,8 @@ android {
         applicationId = "cn.hermes.capture"
         minSdk = 29
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.6.1-mobile-preview"
+        versionCode = 8
+        versionName = "0.6.2-mobile-preview"
     }
 
     buildTypes {

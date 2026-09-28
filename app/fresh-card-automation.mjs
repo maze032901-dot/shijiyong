@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { evaluateFreshEvidenceCandidate } from '../runner/lib/fresh-evidence-candidate.mjs';
 import { publishFixture } from '../runner/lib/publish-fresh-candidate.mjs';
+import { verifyGithubResources } from './github-resource-resolver.mjs';
 import { CARD_DRAFT_VERSION } from '../runner/lib/card-draft-contract.mjs';
 import { AI_CANDIDATE_SCHEMA_VERSION } from '../runner/lib/candidate-response-contract.mjs';
 import { safePathSegment } from '../runner/lib/utils.mjs';
@@ -194,11 +195,18 @@ export async function processEvidenceToCard({
 
   try {
     await onProgress({ stage: 'card_publish', message: '卡片已通过检查，正在写入卡片库。' });
+    const candidate = JSON.parse(await readFile(path.join(outcome.directory, 'candidate.json'), 'utf8'));
+    const verifiedResources = await verifyGithubResources({
+      cards: candidate.cards,
+      enabled: !['0', 'false', 'off'].includes(String(env.HERMES_GITHUB_LOOKUP || '').toLowerCase())
+    });
     const publication = publish({
       root: projectDirectory,
       runDirectory: outcome.directory,
       databasePath: path.join(projectDirectory, 'runtime', 'card-engine.sqlite'),
-      acceptSuggestions
+      acceptSuggestions,
+      sourceEvidencePath: evidencePath,
+      verifiedResources
     });
     return {
       kind: 'published',

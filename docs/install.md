@@ -41,6 +41,8 @@ npm ci
 
 自动抓取使用仓库内保留许可证的 F2；失败时尝试公开网页备用入口。两者都可能被平台限制。视频使用 whisper.cpp large-v3-turbo，图文与视频关键帧使用 RapidOCR。首次 OCR 运行可能下载模型，需保证网络可用。
 
+成卡前会对卡片中明确写出的 GitHub `作者/仓库` 名称向 GitHub 公共 API 做一次有限核实；同一张卡只有一个已核实作者时，也会核实明确提到的同作者插件仓库。核实成功才提供可点击的项目地址；查询失败、限流或名称不确定时保留“未核实”线索，不猜链接，也不阻塞成卡。这一步会把待核实的仓库名称发送给 GitHub，不发送完整证据或模型密钥。若不希望进行外部查询，在启动 Mac 处理器前设置 `HERMES_GITHUB_LOOKUP=0`。
+
 ## 4. Android
 
 按 [Android 构建说明](../android/README.md) 从源码本地构建并安装。App 里将“手机卡片库”填自己的云端 HTTPS 地址和 `HERMES_MOBILE_TOKEN`；“收藏上传”填同一地址和 `HERMES_INTAKE_TOKEN`。`HERMES_MOBILE_PUBLISH_TOKEN` **只在云端和 Mac 配置**，不填进手机。启用抖音采集所需的无障碍权限，并关闭影响后台同步的省电限制。

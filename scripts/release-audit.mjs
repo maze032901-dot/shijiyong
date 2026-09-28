@@ -6,7 +6,10 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
 const listed = (args) => git(...args).split('\0').filter(Boolean);
-const paths = listed(['ls-files', '-z']);
+const paths = [...new Set([
+  ...listed(['ls-files', '-z']),
+  ...listed(['ls-files', '--others', '--exclude-standard', '-z'])
+])];
 const failures = [];
 const warnings = [];
 const forbiddenPath = /(^|\/)(?:data|outputs|logs|node_modules|\.gradle|build|fixtures|local-intake-media|__pycache__|\.venv)(\/|$)|\.(?:apk|aab|mp4|wav|gguf|pem|key|pyc|sqlite(?:-wal|-shm)?)$/i;

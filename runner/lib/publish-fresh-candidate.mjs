@@ -9,6 +9,7 @@ import { persistRun } from "./storage.mjs";
 import { readJson, safePathSegment, sha256, shortHash } from "./utils.mjs";
 import { GENERATION_RULES_VERSION } from "./generation-policy.mjs";
 import { CARD_DRAFT_VERSION } from "./card-draft-contract.mjs";
+import { applyVerifiedGithubResources } from "../../app/github-resource-resolver.mjs";
 
 function text(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -29,20 +30,24 @@ function eventIdFromEvidence(evidence) {
  * Cited visual items are evidence. An uncited same-source image is only a
  * preview, never a citation for an ASR-only claim.
  */
-function cardMedia({ root, sourceId, evidence, evidencePath, rawCard, verifyLocal = false }) {
+export function cardMedia({ sourceId, evidence, evidencePath, rawCard, verifyLocal = false }) {
   const evidenceById = new Map((evidence.items || []).map((item) => [item.id, item]));
   const citedIds = (rawCard?.citations || [])
     .map((citation) => text(citation?.evidence_id))
     .filter((id) => evidenceById.has(id));
   const eventId = eventIdFromEvidence(evidence);
-  const eventDirectory = evidencePath ? path.dirname(path.resolve(evidencePath)) : null;
+  const eventDirectory = evidencePath ? (verifyLocal
+    ? fs.realpathSync(path.dirname(path.resolve(evidencePath))) : path.dirname(path.resolve(evidencePath))) : null;
   const available = (item) => {
     if (!item?.locator?.local_path) return false;
     if (!verifyLocal) return true; // Historical v3 publications keep their old behavior.
     if (!eventDirectory) return false;
     const target = path.resolve(eventDirectory, item.locator.local_path);
     if (!target.startsWith(eventDirectory + path.sep)) return false;
-    try { return fs.statSync(target).isFile(); } catch { return false; }
+    try {
+      const actual = fs.realpathSync(target);
+      return actual.startsWith(eventDirectory + path.sep) && fs.statSync(actual).isFile();
+    } catch { return false; }
   };
   const citedVisual = (item) => {
     if (!item || (item.kind !== "ocr" &&
@@ -75,6 +80,19 @@ function cardMedia({ root, sourceId, evidence, evidencePath, rawCard, verifyLoca
     imageIds: images.map((item) => item.id),
     eventId
   };
+}
+
+export function verifiedSourceEvidencePath({ root, candidateEvidencePath, sourceEvidencePath }) {
+  if (!sourceEvidencePath) return candidateEvidencePath;
+  const runtimeRoot = fs.realpathSync(path.join(root, "runtime"));
+  const sourcePath = fs.realpathSync(sourceEvidencePath);
+  if (!sourcePath.startsWith(runtimeRoot + path.sep) || path.basename(sourcePath) !== "evidence.json") {
+    throw new Error("原始证据必须是本项目 runtime 内的 evidence.json。");
+  }
+  if (sha256(fs.readFileSync(sourcePath)) !== sha256(fs.readFileSync(candidateEvidencePath))) {
+    throw new Error("原始证据与候选证据不一致，不能关联媒体。");
+  }
+  return path.resolve(sourceEvidencePath);
 }
 
 function pathFromArgument(root, value) {
@@ -167,8 +185,9 @@ function catalogTopicDecision({ fixture, candidate, catalog }) {
 }
 
 export function publishFixture({ root, runDirectory, databasePath, acceptSuggestions = false,
-  replaceExisting = false, writePublication = writePublicationAtomic }) {
+  replaceExisting = false, sourceEvidencePath = null, verifiedResources = [], writePublication = writePublicationAtomic }) {
   const bundle = readBundle(runDirectory);
+  const publicationEvidencePath = verifiedSourceEvidencePath({ root, candidateEvidencePath: bundle.evidencePath, sourceEvidencePath });
   const inputRecord = freshInputRecord(bundle.evidence);
   inputRecord.markdown_sha256 = sha256(JSON.stringify(bundle.evidence));
   inputRecord.raw_markdown = JSON.stringify(bundle.evidence, null, 2);
@@ -192,16 +211,17 @@ export function publishFixture({ root, runDirectory, databasePath, acceptSuggest
     source: {
       ...normalised.fixture.source,
       kind: normalised.fixture.source.kind === "douyin_post" ? "video" : normalised.fixture.source.kind,
-      note_path: path.relative(root, bundle.evidencePath)
+      note_path: path.relative(root, publicationEvidencePath)
     },
     topics: decisions.topics,
     cards: normalised.fixture.cards.map((card) => {
       const rawCard = rawCardsByTitle.get(text(card.title));
       const citedIds = (rawCard?.citations || []).map((citation) => text(citation?.evidence_id)).filter(Boolean);
-      const media = cardMedia({ root, sourceId: bundle.evidence.source.id, evidence: bundle.evidence, evidencePath: bundle.evidencePath,
+      const media = cardMedia({ sourceId: bundle.evidence.source.id, evidence: bundle.evidence, evidencePath: publicationEvidencePath,
         rawCard, verifyLocal: isDraft });
       return {
         ...card,
+        resources: applyVerifiedGithubResources(card, verifiedResources),
         topic_ids: card.topic_ids.map((topicId) => decisions.topicIdMap.get(topicId) || topicId),
         evidence_ids: citedIds,
         image_ids: media.imageIds,
@@ -217,7 +237,7 @@ export function publishFixture({ root, runDirectory, databasePath, acceptSuggest
     source_id: bundle.evidence.source.id,
     candidate_run_directory: path.relative(root, runDirectory),
     candidate_path: path.relative(root, bundle.candidatePath),
-    evidence_path: path.relative(root, bundle.evidencePath),
+    evidence_path: path.relative(root, publicationEvidencePath),
     topic_decisions: decisions.normalizations,
     accept_suggestions: Boolean(acceptSuggestions),
     fixture

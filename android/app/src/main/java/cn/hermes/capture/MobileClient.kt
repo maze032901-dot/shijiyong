@@ -57,22 +57,18 @@ class MobileConfigStore(private val context: Context) {
     }
 
     fun save(baseUrl: String, token: String) {
-        val parsed = URL(baseUrl.trim())
-        val normalizedToken = token.trim()
         val debug = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
-        require(parsed.protocol == "https" || (debug && parsed.protocol == "http" && parsed.host in listOf("localhost", "127.0.0.1"))) {
-            "正式云端必须使用 HTTPS"
-        }
-        require(parsed.userInfo == null && parsed.query == null && parsed.ref == null) { "地址不能包含凭据或参数" }
+        val normalizedUrl = ServiceBaseUrl.normalize(baseUrl, allowLocalHttp = debug)
+        val normalizedToken = token.trim()
         require(normalizedToken.length >= 24) { "手机凭据至少需要 24 个字符" }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key())
         val packed = cipher.iv + cipher.doFinal(normalizedToken.toByteArray(Charsets.UTF_8))
         val previous = read().baseUrl
-        prefs.edit().putString("base_url", baseUrl.trim().trimEnd('/'))
+        prefs.edit().putString("base_url", normalizedUrl)
             .putString("encrypted_token", Base64.encodeToString(packed, Base64.NO_WRAP))
             .apply {
-                if (previous != baseUrl.trim().trimEnd('/')) remove("mac_fingerprint")
+                if (previous != normalizedUrl) remove("mac_fingerprint")
             }.apply()
     }
 

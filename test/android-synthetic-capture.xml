@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="state_v2">{"records":[],"saved_links":[{"event_id":"00000000-0000-4000-8000-000000000001","timestamp":1700000000000,"trigger":"synthetic emulator test","link":"https://example.invalid/video/synthetic-001","sync_state":"local_saved","sync_attempts":0},{"event_id":"00000000-0000-4000-8000-000000000002","timestamp":1700000001000,"trigger":"synthetic emulator test","link":"https://example.invalid/video/synthetic-002","sync_state":"local_saved","sync_attempts":0}]}</string>
+</map>

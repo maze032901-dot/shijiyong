@@ -1,6 +1,7 @@
 package cn.hermes.capture
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -27,10 +28,18 @@ private object LinkSyncExecutor {
             store.add(CaptureRecord(System.currentTimeMillis(), "同步诊断：没有保存后端地址或密钥", "sync_config_missing"))
             return false
         }
+        val debug = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val endpoint = try {
+            ServiceBaseUrl.intakeEndpoint(config.baseUrl, allowLocalHttp = debug)
+        } catch (error: IllegalArgumentException) {
+            store.add(CaptureRecord(System.currentTimeMillis(), "同步诊断：收藏上传地址无效；请在设置中重新填写。${error.message.orEmpty()}", "sync_config_invalid"))
+            return false
+        }
         val pending = store.pendingSync()
         store.add(CaptureRecord(System.currentTimeMillis(), "同步诊断：准备上传 ${pending.size} 条", "sync_started"))
+        var shouldRetry = false
         for (saved in pending) {
-            when (val result = send(config, saved)) {
+            when (val result = send(endpoint, config.token, saved)) {
                 is SendResult.Accepted -> {
                     store.updateSyncState(saved.eventId, "server_queued", incrementAttempts = true)
                     store.add(CaptureRecord(System.currentTimeMillis(), "同步诊断：云端已接收（HTTP ${result.code}）", "sync_accepted", saved.link))
@@ -38,7 +47,7 @@ private object LinkSyncExecutor {
                 is SendResult.Retry -> {
                     store.updateSyncState(saved.eventId, "retryable", incrementAttempts = true)
                     store.add(CaptureRecord(System.currentTimeMillis(), "同步诊断：${result.detail}", "sync_retry", saved.link))
-                    return true
+                    shouldRetry = true
                 }
                 is SendResult.Rejected -> {
                     store.updateSyncState(saved.eventId, "sync_rejected", incrementAttempts = true)
@@ -46,18 +55,18 @@ private object LinkSyncExecutor {
                 }
             }
         }
-        return false
+        return shouldRetry
     }
 
-    private fun send(config: ReceiverConfig, saved: SavedLink): SendResult {
+    private fun send(endpoint: String, token: String, saved: SavedLink): SendResult {
         return try {
-            val connection = (URL("${config.baseUrl}/api/intake").openConnection() as HttpURLConnection).apply {
+            val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 connectTimeout = CONNECT_TIMEOUT_MS
                 readTimeout = READ_TIMEOUT_MS
                 doOutput = true
                 setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                setRequestProperty("Authorization", "Bearer ${config.token}")
+                setRequestProperty("Authorization", "Bearer $token")
             }
             val body = JSONObject()
                 .put("event_id", saved.eventId)
