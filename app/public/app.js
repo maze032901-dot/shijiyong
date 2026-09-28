@@ -1,3 +1,5 @@
+import { projectResourceLinks } from './resource-links.js';
+
 const app = document.querySelector('#app');
 const url = new URL(location.href);
 const h = (tag, className, value) => {
@@ -59,7 +61,7 @@ function renderHome(library) {
     a.append(content, h('span', 'small', '打开主题 ↗')); grid.append(a);
   }
   const home = h('div', 'home-layout');
-  home.append(hero, grid.childElementCount ? grid : h('div', 'empty', '还没有主题。收藏并发布第一张卡片后会出现在这里。')));
+  home.append(hero, grid.childElementCount ? grid : h('div', 'empty', '还没有主题。收藏并发布第一张卡片后会出现在这里。'));
   app.append(home);
 }
 function renderTopic(library, topicId) {
@@ -113,15 +115,23 @@ function renderCard(card, back) {
   }
   for (const field of card.content || []) if (field.value) detail.append(detailBlock(field.label || '内容', field.value));
   for (const path of card.paths || []) if (path.steps?.length) detail.append(detailBlock(path.title || '操作步骤', path.steps.map((step, i) => `${i + 1}. ${typeof step === 'string' ? step : step.text || step.title || ''}`).join('\n')));
-  if (card.resources?.length) {
+  const projectResources = projectResourceLinks(card.resources || []);
+  if (projectResources.length) {
+    const box = h('section', 'detail-block resource-section');
+    box.append(h('h2', '', '项目入口'));
+    const list = h('div', 'action-list');
+    for (const resource of projectResources) list.append(link(`${resource.label || '打开资源'} ↗`, safeUrl(resource.url), 'action'));
+    box.append(list);
+    detail.append(box);
+  }
+  const resourceClues = (card.resources || []).filter((resource) => !projectResources.includes(resource));
+  if (resourceClues.length) {
     const box = h('section', 'detail-block');
     box.append(h('h2', '', '资源与获取线索'));
-    for (const resource of card.resources) {
+    for (const resource of resourceClues) {
       const row = h('p', 'resource-row');
-      const target = safeUrl(resource.url);
-      if (target) row.append(link(resource.label || '打开资源 ↗', target, 'resource-link'));
-      else row.append(h('strong', '', resource.label || '未核实资源'));
-      if (!target) row.append(h('span', 'resource-note', '未取得可核实的直达网址'));
+      row.append(h('strong', '', resource.label || '未核实资源'));
+      if (!safeUrl(resource.url)) row.append(h('span', 'resource-note', '未取得可核实的直达网址'));
       if (resource.note) row.append(h('span', 'resource-note', resource.note));
       box.append(row);
     }
@@ -149,8 +159,8 @@ function renderInteraction(library) {
   app.replaceChildren(heading('COLLECTION', cards[0].collection?.title || '来自同一收藏', `${cards.length} 张卡片`, back));
   const grid = h('section', 'card-grid');
   for (const card of cards) grid.append(cardPreview(card, { topicId: topic }));
-  const source = sourceOf(cards[0]);
-  if (source) app.append(link('打开原笔记 ↗', source, 'action primary'));
+  const originalSource = sourceOf(cards[0]);
+  if (originalSource) app.append(link('打开原笔记 ↗', originalSource, 'action primary'));
   app.append(grid);
 }
 async function manage(eventId, action, button) {
