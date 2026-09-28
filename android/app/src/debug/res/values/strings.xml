@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">拾即用预览版</string>
+    <string name="accessibility_service_name">拾即用预览版抖音采集</string>
+</resources>

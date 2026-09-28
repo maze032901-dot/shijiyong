@@ -1,0 +1,14 @@
+{
+  "version": "hermes-card-types/1",
+  "types": [
+    { "id": "tool", "label": "工具", "description": "主要用途是进入并使用某个产品或服务；即使来源在推荐它，也按实际使用功能归类。", "intents": ["function_entry", "experience_judgement", "general_retrieval"] },
+    { "id": "skill", "label": "Skill", "description": "可安装或复用的完整能力包。", "intents": ["function_entry", "general_retrieval"] },
+    { "id": "prompt", "label": "Prompt", "description": "可直接复制使用的完整指令。", "intents": ["prompt_use", "general_retrieval"] },
+    { "id": "method", "label": "方法", "description": "可照着执行的步骤或方案。", "intents": ["method_options", "general_retrieval"] },
+    { "id": "image_asset", "label": "图片素材", "description": "本身可获取和复用的视觉素材。", "intents": ["visual_reference", "general_retrieval"] },
+    { "id": "inspiration", "label": "灵感", "description": "可借鉴的想法、作品或视觉方向。", "intents": ["visual_reference", "general_retrieval"] },
+    { "id": "knowledge", "label": "知识", "description": "概念、事实、解释或没有具体推荐对象的清单。", "intents": ["concept_learning", "general_retrieval"] },
+    { "id": "recommendation", "label": "推荐", "description": "主要用途是记住并选择具体对象，如餐厅、地点或书；若核心是实际使用软件功能，优先归为工具。作者体验须标明为来源观点。", "intents": ["experience_judgement", "general_retrieval"] },
+    { "id": "generic_unknown", "label": "待归类", "description": "当前类型均不贴切时使用；在 subtype 写明具体内容形态，不因类型目录缺项丢弃可用内容。", "intents": ["general_retrieval"] }
+  ]
+}

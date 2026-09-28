@@ -1,0 +1,17 @@
+{$HERMES_DOMAIN} {
+  encode zstd gzip
+
+  # A paired Android app sends a bearer token, not browser credentials. Keep this
+  # narrow exception so the dashboard and saved media are never public.
+  @intake path /api/intake /api/intake/jobs /api/intake/retry /api/intake/dismiss /api/intake/complete /api/mac/events /api/mac/next /api/mac/results /api/mobile/v1/* /api/mac/mobile/*
+  handle @intake {
+    reverse_proxy hermes:4318
+  }
+
+  handle {
+    basic_auth {
+      {$HERMES_DASHBOARD_USER} {$HERMES_DASHBOARD_PASSWORD_HASH}
+    }
+    reverse_proxy hermes:4318
+  }
+}

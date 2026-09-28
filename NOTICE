@@ -1,0 +1,23 @@
+拾即用 (ShiJiYong) self-hosted technical preview
+
+拾即用 application code is licensed under Apache License 2.0; see LICENSE.
+
+Third-party components distributed with this repository:
+
+* F2 0.0.1.7 (Johnserf-Seed and contributors), bundled under
+  runtime/f2-capture-spike/_vendor/f2. F2 is Apache-2.0 licensed. Its
+  upstream source is https://github.com/Johnserf-Seed/f2 and its original
+  license is retained in that directory. This repository carries a trimmed
+  source distribution: upstream documentation, tests and repository metadata
+  were omitted, the bundled README was shortened, and sample cookie values
+  and sample IDs in configuration were cleared. The F2 application code was
+  not modified.
+* Noto Serif SC font files, distributed under the SIL Open Font License 1.1.
+  See licenses/NotoSerifSC-OFL.txt. The font is used by the Android app only.
+* Gradle Wrapper scripts and wrapper JAR, distributed with Gradle under the
+  Apache License 2.0. They are used only to build the Android app.
+
+Other dependencies are fetched by their respective package managers during
+installation; their licenses remain with the upstream packages. The
+whisper.cpp executable and large-v3-turbo model are not distributed here.
+No Figma-exported imagery or user media is distributed here.

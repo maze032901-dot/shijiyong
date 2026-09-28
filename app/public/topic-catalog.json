@@ -1,0 +1,139 @@
+{
+  "schema_version": "hermes/topic-context/v1",
+  "version": 1,
+  "description": "模型归类与首页归并共用的宽主题目录。aliases 和 examples 只是语义线索，不是关键词硬匹配规则；空主题不在首页展示。",
+  "policy": {
+    "prefer_existing": true,
+    "semantic_match_required": true,
+    "unknown_result": "new_reusable_topic_title",
+    "show_empty_topics": false,
+    "examples_are_hints_not_rules": true
+  },
+  "topics": [
+    {
+      "id": "interface",
+      "title": "界面与交互",
+      "aliases": ["UI", "交互设计", "网页设计"],
+      "examples": ["导航栏", "进度条", "组件动效"],
+      "subtitle": "让好用的设计，触手可及。", "icon": "folder",
+      "keywords": ["ui", "界面", "交互", "导航", "进度条", "figma", "组件", "设计系统", "无障碍", "网页设计", "网站设计", "页面设计", "app设计", "设计规范", "交互设计", "提示词设计"]
+    },
+    {
+      "id": "academic",
+      "title": "学术研究",
+      "aliases": ["论文", "科研"],
+      "examples": ["文献检索", "论文写作", "学术工具"],
+      "subtitle": "在好奇心的驱动下，\n走得更远。", "icon": "folder",
+      "keywords": ["论文", "学术", "科研", "nature", "研究", "文献"]
+    },
+    {
+      "id": "career",
+      "title": "求职与职场",
+      "aliases": ["求职", "职场"],
+      "examples": ["面试准备", "外企清单", "工作方式"],
+      "subtitle": "更好的工作，\n更大的世界。", "icon": "folder",
+      "keywords": ["求职", "面试", "职场", "外企", "hr", "简历", "招聘", "职业发展", "工作生活平衡"]
+    },
+    {
+      "id": "visual",
+      "title": "视觉创作",
+      "aliases": ["视觉设计", "创作"],
+      "examples": ["角色设计", "影像风格", "插画方案"],
+      "subtitle": "用画面，记录柔软而真实的生活。", "icon": "folder",
+      "keywords": ["视觉", "角色", "青春", "影像", "创作", "图片", "插画", "摄影", "绘画"]
+    },
+    {
+      "id": "agent",
+      "title": "AI Agent",
+      "aliases": ["智能体", "Agent"],
+      "examples": ["Agent 架构", "自动化工作流", "模型协作"],
+      "subtitle": "把想象力，变成生产力。", "icon": "folder",
+      "keywords": ["agent", "智能体", "架构", "自动化"]
+    },
+    {
+      "id": "health",
+      "title": "运动与健康",
+      "aliases": ["运动", "健康"],
+      "examples": ["跑步计划", "有氧训练", "健身安排"],
+      "subtitle": "更强的身体，\n去做更多喜欢的事。", "icon": "folder",
+      "keywords": ["跑步", "运动", "健康", "有氧", "训练", "健身"]
+    },
+    {
+      "id": "food", "title": "美食与烹饪",
+      "aliases": ["美食", "吃饭", "餐饮", "做饭"],
+      "examples": ["餐厅与小店", "菜谱与食谱", "烹饪技巧", "饮品与咖啡"],
+      "subtitle": "好吃的店，也有亲手做的味道。", "icon": "folder",
+      "keywords": ["美食", "吃饭", "餐厅", "小店", "餐饮", "菜谱", "食谱", "烹饪", "做饭", "料理", "饮品", "咖啡", "火锅", "重庆吃", "甜品"]
+    },
+    {
+      "id": "travel", "title": "旅行与出行",
+      "aliases": ["旅行", "旅游", "出游", "出行"],
+      "examples": ["目的地攻略", "城市漫游", "交通与住宿", "景点体验"],
+      "subtitle": "把下一段路，慢慢收进来。", "icon": "folder",
+      "keywords": ["旅行", "旅游", "出行", "出游", "目的地", "行程", "景点", "酒店", "住宿", "机票", "城市漫游"]
+    },
+    {
+      "id": "home", "title": "居家与生活",
+      "aliases": ["家居", "居家", "生活方式"],
+      "examples": ["收纳整理", "家装布置", "日常生活技巧"],
+      "subtitle": "把日子过得更顺手。", "icon": "folder",
+      "keywords": ["居家", "家居", "家装", "装修", "收纳", "清洁", "家务", "生活方式"]
+    },
+    {
+      "id": "learning", "title": "学习与技能",
+      "aliases": ["学习", "教育", "技能提升"],
+      "examples": ["语言学习", "课程资源", "学习方法"],
+      "subtitle": "想学的东西，一点点积累。", "icon": "folder",
+      "keywords": ["学习", "教育", "课程", "语言", "英语", "考试", "技能提升", "读书方法"]
+    },
+    {
+      "id": "technology", "title": "数码与科技",
+      "aliases": ["数码", "科技", "软件与硬件"],
+      "examples": ["手机与电脑", "软件使用", "模型 API"],
+      "subtitle": "理解工具，也理解它怎么运作。", "icon": "folder",
+      "keywords": ["数码", "科技", "手机", "电脑", "软件", "硬件", "ai", "模型api", "api调用", "编程", "代码", "开发工具"]
+    },
+    {
+      "id": "finance", "title": "消费与理财",
+      "aliases": ["理财", "消费", "购物"],
+      "examples": ["预算管理", "产品选购", "储蓄与投资"],
+      "subtitle": "花得明白，存得踏实。", "icon": "folder",
+      "keywords": ["消费", "购物", "选购", "预算", "理财", "储蓄", "投资", "保险", "省钱"]
+    },
+    {
+      "id": "business", "title": "商业与创业",
+      "aliases": ["商业", "创业", "经营"],
+      "examples": ["创业经验", "市场分析", "产品经营"],
+      "subtitle": "记录那些值得琢磨的生意。", "icon": "folder",
+      "keywords": ["商业", "创业", "经营", "营销", "市场分析", "品牌策略", "生意", "电商"]
+    },
+    {
+      "id": "culture", "title": "文化与娱乐",
+      "aliases": ["文化", "娱乐", "阅读与观影"],
+      "examples": ["电影与剧集", "书籍", "音乐", "游戏"],
+      "subtitle": "喜欢的故事和作品，都留在这里。", "icon": "folder",
+      "keywords": ["文化", "电影", "剧集", "影视", "书籍", "小说", "音乐", "游戏", "演出", "展览"]
+    },
+    {
+      "id": "style", "title": "穿搭与美妆",
+      "aliases": ["穿搭", "时尚", "美妆"],
+      "examples": ["服装搭配", "护肤", "化妆技巧"],
+      "subtitle": "找到让自己舒服的风格。", "icon": "folder",
+      "keywords": ["穿搭", "时尚", "服装", "护肤", "化妆", "美妆", "发型", "配饰"]
+    },
+    {
+      "id": "family", "title": "家庭与育儿",
+      "aliases": ["家庭", "育儿", "亲子"],
+      "examples": ["亲子活动", "儿童成长", "家庭安排"],
+      "subtitle": "把一起成长的细节留下来。", "icon": "folder",
+      "keywords": ["家庭", "育儿", "亲子", "儿童", "宝宝", "孩子", "夫妻"]
+    },
+    {
+      "id": "pets", "title": "宠物与动物",
+      "aliases": ["宠物", "猫狗", "动物"],
+      "examples": ["宠物护理", "养猫养狗", "动物知识"],
+      "subtitle": "和小动物有关的事。", "icon": "folder",
+      "keywords": ["宠物", "养猫", "养狗", "猫咪", "狗狗", "动物", "宠物护理"]
+    }
+  ]
+}

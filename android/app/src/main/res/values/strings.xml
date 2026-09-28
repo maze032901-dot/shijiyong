@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">拾即用</string>
+    <string name="accessibility_service_name">拾即用抖音采集</string>
+    <string name="accessibility_service_description">仅在抖音中识别“复制链接”操作，读取并保存抖音链接。不会记录其他应用的屏幕内容。</string>
+</resources>

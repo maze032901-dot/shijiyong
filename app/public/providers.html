@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 供应商 · 拾即用</title>
+  <link rel="stylesheet" href="/providers.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <a class="back-link" href="/" aria-label="返回首页">←</a>
+      <div><p class="eyebrow">拾即用 / SETTINGS</p><h1>AI 供应商</h1></div>
+      <span id="active-summary" class="active-summary">正在读取</span>
+    </header>
+    <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    <section class="layout">
+      <section class="panel provider-list-panel">
+        <div class="panel-heading"><div><p class="eyebrow">MY PROVIDERS</p><h2>我的供应商</h2></div><button id="new-provider" class="secondary-button" type="button">＋ 添加</button></div>
+        <p class="panel-intro">选择一个供应商作为后续笔记整理的模型入口。接口地址需兼容 OpenAI Chat Completions 格式。</p>
+        <div id="provider-list" class="provider-list"><div class="empty-state">正在读取供应商…</div></div>
+      </section>
+      <section class="panel editor-panel">
+        <div class="panel-heading"><div><p class="eyebrow">PROVIDER CONFIG</p><h2 id="form-title">添加供应商</h2></div><span id="form-state" class="form-state">本机保存</span></div>
+        <form id="provider-form">
+          <input id="provider-id" type="hidden" />
+          <div class="field-row">
+            <label>供应商名称<input id="provider-name" required placeholder="例如：DeepSeek" /></label>
+            <label>备注（可选）<input id="provider-remark" placeholder="例如：个人账号" /></label>
+          </div>
+          <label>请求地址<input id="provider-endpoint" required placeholder="https://api.example.com/v1/chat/completions" /></label>
+          <p class="field-help">可填写基础地址（如 <code>.../v1</code>）或完整的 Chat Completions 地址；保存和测试时会自动补全 <code>/chat/completions</code>。HTTPS 地址可直接使用，本机调试地址允许 HTTP。</p>
+          <label>默认模型<input id="provider-model" required placeholder="例如：deepseek-chat、gpt-4o-mini" /></label>
+          <div class="field-row">
+            <label>最大输出 Token<input id="provider-max-output" type="number" min="512" max="131072" step="1" value="8192" required /></label>
+            <label>模型上下文容量（可选）<input id="provider-context-window" type="number" min="4096" max="4000000" step="1" placeholder="从模型官方文档填写" /></label>
+          </div>
+          <p class="field-help">默认输出上限为 8192，但并非所有模型都支持；请按当前模型文档调整。上下文容量留空则无法预先判断模型是否装得下证据；填写后会在发送前估算并拦截明显超限的请求。估算并非精确分词。</p>
+          <label>API Key
+            <span class="secret-input"><input id="provider-key" type="password" autocomplete="new-password" placeholder="粘贴 API Key；已保存的 Key 可留空" /><button id="toggle-key" type="button" aria-label="显示或隐藏 API Key">显示</button></span>
+          </label>
+          <p id="key-hint" class="field-help">密钥只保存到本机，不会显示在供应商列表中。</p>
+          <div class="form-actions"><button id="test-provider" class="secondary-button" type="button" title="会向供应商发送一条最小请求并消耗少量额度">⚡ 测试连接</button><button class="primary-button" type="submit">保存供应商</button></div>
+          <p class="field-help quota-warning">测试连接会实际调用一次模型，可能消耗供应商的免费额度或 Token；额度紧张时请不要重复点击。</p>
+        </form>
+        <div class="config-note"><span>💡</span><div><strong>笔记规则仍由拾即用负责</strong><p>供应商只负责生成候选卡片。切换供应商不会改变你的证据、主题和卡片规则。</p></div></div>
+      </section>
+    </section>
+  </main>
+  <script src="/providers.js" type="module"></script>
+</body>
+</html>

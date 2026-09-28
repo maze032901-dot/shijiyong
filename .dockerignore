@@ -1,0 +1,17 @@
+**
+!Dockerfile
+!package.json
+!app/
+!app/**
+!runner/
+!runner/**
+**/__pycache__/**
+**/*.pyc
+**/*.egg-info/**
+**/.venv/**
+app/public/local-intake-media/**
+app/public/card-draft-trial-*.html
+**/*.local.json
+**/*.local.env
+**/*.pem
+**/*.key

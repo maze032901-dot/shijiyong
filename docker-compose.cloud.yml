@@ -1,0 +1,38 @@
+services:
+  hermes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # Only this secret lets a paired mobile app submit a collection event.
+      HERMES_INTAKE_TOKEN: ${HERMES_INTAKE_TOKEN:?set in .env}
+      HERMES_MOBILE_TOKEN: ${HERMES_MOBILE_TOKEN:?set in .env}
+      HERMES_MOBILE_PUBLISH_TOKEN: ${HERMES_MOBILE_PUBLISH_TOKEN:?set in .env}
+    volumes:
+      - ./data:/data
+    networks: [internal]
+
+  gateway:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on: [hermes]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      HERMES_DOMAIN: ${HERMES_DOMAIN:?set in .env}
+      HERMES_DASHBOARD_USER: ${HERMES_DASHBOARD_USER:?set in .env}
+      HERMES_DASHBOARD_PASSWORD_HASH: ${HERMES_DASHBOARD_PASSWORD_HASH:?set in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [internal]
+
+networks:
+  internal:
+
+volumes:
+  caddy_data:
+  caddy_config:

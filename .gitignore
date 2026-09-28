@@ -1,0 +1,48 @@
+# Secrets and per-install configuration
+.env
+.env.*
+!.env.example
+**/local.properties
+**/*.local.json
+**/*.local.env
+*.pem
+*.key
+
+# Personal data and generated outputs
+data/
+outputs/
+logs/
+*.log
+*.sqlite*
+*.mp4
+*.wav
+*.gguf
+*.bin
+*.apk
+*.aab
+app/public/local-intake-media/
+app/public/card-draft-trial-*.html
+runtime/**
+!runtime/f2-capture-spike/
+runtime/f2-capture-spike/*
+!runtime/f2-capture-spike/_vendor/
+runtime/f2-capture-spike/_vendor/*
+!runtime/f2-capture-spike/_vendor/f2/
+!runtime/f2-capture-spike/_vendor/f2/**
+**/__pycache__/
+*.pyc
+**/*.egg-info/
+**/.venv/
+
+# Build caches
+node_modules/
+.gradle/
+android/**/build/
+android/.cxx/
+.android-toolchain/
+.DS_Store
+
+# Local planning notes, not release documentation
+task_plan.md
+findings.md
+progress.md

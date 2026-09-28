@@ -1,0 +1,21 @@
+{
+  "name": "shijiyong-self-hosted-preview",
+  "private": true,
+  "version": "0.1.0-preview",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "node app/server.mjs",
+    "receive": "PORT=4319 node app/server.mjs --lan",
+    "watch:cloud": "HERMES_AUTO_PUBLISH=1 node scripts/watch-cloud-jobs.mjs",
+    "watch:cloud:evidence": "node scripts/watch-cloud-jobs.mjs",
+    "attach:media": "node scripts/attach-media.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "audit:release": "node scripts/release-audit.mjs",
+    "configure:cloud-status": "node scripts/configure-cloud-status.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.63.0"
+  }
+}
